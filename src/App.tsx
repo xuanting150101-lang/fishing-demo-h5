@@ -1,160 +1,65 @@
-import { useState, useCallback } from "react";
-import { HomePage } from "./pages/HomePage";
-import { SpotsPage } from "./pages/SpotsPage";
-import { DiscoverPage } from "./pages/DiscoverPage";
-import { ProfilePage } from "./pages/ProfilePage";
-import { UserPage } from "./pages/UserPage";
-import { SavedSpotsPage } from "./pages/SavedSpotsPage";
-import { BottomNav } from "./components/BottomNav";
-import { SpotDetail } from "./components/SpotDetail";
-import { PostDetail } from "./components/PostDetail";
-import { PublishPage } from "./components/PublishPage";
-import { FullScreenGallery } from "./components/FullScreenGallery";
+import { useState } from "react";
+import Home from "./pages/Home";
+import SpotDetail from "./components/SpotDetail";
+import PostDetail from "./components/PostDetail";
+import PublishPage from "./components/PublishPage";
+import BottomNav from "./components/BottomNav";
 import { ToastProvider } from "./components/Toast";
-import type { Spot, Post, User } from "./types";
+import type { Spot } from "./types";
+import type { Post } from "./types";
 
 type View =
-  | "home"
-  | "spots"
-  | "discover"
-  | "profile"
-  | "spotDetail"
-  | "postDetail"
-  | "userPage"
-  | "savedSpots"
-  | "publish";
+  | { type: "home"; tab: "discover" | "spots" | "saved" | "profile" }
+  | { type: "spotDetail"; spot: Spot }
+  | { type: "postDetail"; post: Post }
+  | { type: "publish" };
 
-export default function App() {
-  const [currentView, setCurrentView] = useState<View>("home");
-  const [selectedSpot, setSelectedSpot] = useState<Spot | null>(null);
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState("home");
-  const [gallery, setGallery] = useState<{
-    images: string[];
-    startIndex: number;
-  } | null>(null);
+function App() {
+  const [view, setView] = useState<View>({ type: "home", tab: "discover" });
 
-  const handleSpotClick = useCallback((spot: Spot) => {
-    setSelectedSpot(spot);
-    setCurrentView("spotDetail");
-  }, []);
+  const navigateToSpot = (spot: Spot) => setView({ type: "spotDetail", spot });
+  const navigateToPost = (post: Post) => setView({ type: "postDetail", post });
+  const navigateHome = (tab: "discover" | "spots" | "saved" | "profile") =>
+    setView({ type: "home", tab });
+  const navigatePublish = () => setView({ type: "publish" });
 
-  const handlePostClick = useCallback((post: Post) => {
-    setSelectedPost(post);
-    setCurrentView("postDetail");
-  }, []);
-
-  const handleUserClick = useCallback((user: User) => {
-    setSelectedUser(user);
-    setCurrentView("userPage");
-  }, []);
-
-  const handleBack = useCallback(() => {
-    if (currentView === "spotDetail") {
-      setCurrentView("spots");
-      setSelectedSpot(null);
-    } else if (currentView === "postDetail") {
-      setCurrentView("discover");
-      setSelectedPost(null);
-    } else if (currentView === "userPage") {
-      setCurrentView("discover");
-      setSelectedUser(null);
-    } else if (currentView === "savedSpots") {
-      setCurrentView("profile");
-    } else if (currentView === "publish") {
-      setCurrentView("discover");
-    } else {
-      setCurrentView("home");
-    }
-  }, [currentView]);
-
-  const handleTabChange = useCallback((tab: string) => {
-    setActiveTab(tab);
-    switch (tab) {
-      case "home":
-        setCurrentView("home");
-        break;
-      case "spots":
-        setCurrentView("spots");
-        break;
-      case "discover":
-        setCurrentView("discover");
-        break;
-      case "profile":
-        setCurrentView("profile");
-        break;
-    }
-  }, []);
-
-  const showGallery = useCallback((images: string[], startIndex: number) => {
-    setGallery({ images, startIndex });
-  }, []);
+  const currentTab =
+    view.type === "home" ? view.tab : ("discover" as const);
 
   return (
     <ToastProvider>
-    <div className="min-h-[100dvh] bg-[#030508] flex flex-col max-w-md mx-auto relative overflow-hidden">
-      <main className="flex-1 overflow-y-auto scrollbar-hide">
-        {currentView === "home" && (
-          <HomePage onSpotClick={handleSpotClick} />
+      <div className="relative w-full max-w-[430px] mx-auto min-h-screen bg-[#0B1628] text-white overflow-hidden">
+        <div className="pb-20">
+          {view.type === "home" && (
+            <Home
+              activeTab={view.tab}
+              onSpotClick={navigateToSpot}
+              onPostClick={navigateToPost}
+              onPublish={navigatePublish}
+            />
+          )}
+          {view.type === "spotDetail" && (
+            <SpotDetail
+              spot={view.spot}
+              onBack={() => navigateHome(currentTab)}
+            />
+          )}
+          {view.type === "postDetail" && (
+            <PostDetail
+              post={view.post}
+              onBack={() => navigateHome(currentTab)}
+            />
+          )}
+          {view.type === "publish" && (
+            <PublishPage onBack={() => navigateHome(currentTab)} />
+          )}
+        </div>
+        {view.type === "home" && (
+          <BottomNav activeTab={view.tab} onNavigate={navigateHome} />
         )}
-        {currentView === "spots" && (
-          <SpotsPage onSpotClick={handleSpotClick} />
-        )}
-        {currentView === "discover" && (
-          <DiscoverPage
-            onPostClick={handlePostClick}
-            onPublishClick={() => setCurrentView("publish")}
-          />
-        )}
-        {currentView === "profile" && (
-          <ProfilePage
-            onUserClick={handleUserClick}
-            onPostClick={handlePostClick}
-            onSpotClick={handleSpotClick}
-            onSavedSpotsClick={() => setCurrentView("savedSpots")}
-          />
-        )}
-        {currentView === "spotDetail" && selectedSpot && (
-          <SpotDetail spot={selectedSpot} onBack={handleBack} />
-        )}
-        {currentView === "postDetail" && selectedPost && (
-          <PostDetail
-            post={selectedPost}
-            onBack={handleBack}
-            onUserClick={handleUserClick}
-            onSpotClick={handleSpotClick}
-            onShowGallery={showGallery}
-          />
-        )}
-        {currentView === "userPage" && selectedUser && (
-          <UserPage
-            user={selectedUser}
-            onBack={handleBack}
-            onPostClick={handlePostClick}
-            onSpotClick={handleSpotClick}
-          />
-        )}
-        {currentView === "savedSpots" && (
-          <SavedSpotsPage onBack={handleBack} onSpotClick={handleSpotClick} />
-        )}
-        {currentView === "publish" && (
-          <PublishPage onBack={handleBack} />
-        )}
-      </main>
-
-      {!["spotDetail", "postDetail", "userPage", "savedSpots", "publish"].includes(
-        currentView
-      ) && <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />}
-
-      {gallery && (
-        <FullScreenGallery
-          images={gallery.images}
-          startIndex={gallery.startIndex}
-          onClose={() => setGallery(null)}
-        />
-      )}
-    </div>
+      </div>
     </ToastProvider>
   );
 }
+
+export default App;

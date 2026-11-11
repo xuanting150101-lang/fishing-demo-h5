@@ -1,58 +1,49 @@
-import { Home, MapPin, Compass, User } from "lucide-react";
+import { Compass, MapPin, Bookmark, User } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface BottomNavProps {
-  active: "home" | "spots" | "discover" | "profile";
-  onChange: (tab: "home" | "spots" | "discover" | "profile") => void;
+  activeTab: "discover" | "spots" | "saved" | "profile";
+  onNavigate: (tab: "discover" | "spots" | "saved" | "profile") => void;
 }
 
-const tabs = [
-  { key: "home" as const, label: "首页", icon: Home },
-  { key: "spots" as const, label: "钓点", icon: MapPin },
-  { key: "discover" as const, label: "发现", icon: Compass },
-  { key: "profile" as const, label: "我的", icon: User },
-];
+export default function BottomNav({ activeTab, onNavigate }: BottomNavProps) {
+  const tabs = [
+    { key: "discover" as const, label: "发现", icon: Compass },
+    { key: "spots" as const, label: "钓点", icon: MapPin },
+    { key: "saved" as const, label: "收藏", icon: Bookmark },
+    { key: "profile" as const, label: "我的", icon: User },
+  ];
 
-export function BottomNav({ active, onChange }: BottomNavProps) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 safe-bottom">
-      <div className="max-w-md mx-auto glass-strong border-t border-white/5">
-        <div className="flex items-center justify-around py-2">
-          {tabs.map((tab) => {
-            const isActive = active === tab.key;
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => onChange(tab.key)}
-                className="flex flex-col items-center gap-0.5 px-4 py-1.5 min-w-[64px] transition-all duration-200"
+    <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-center">
+      <div className="w-full max-w-[430px] bg-[#0B1628]/95 backdrop-blur-md border-t border-white/5 px-6 py-2 flex justify-between items-center">
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.key;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => onNavigate(tab.key)}
+              className="flex flex-col items-center gap-0.5 py-1 px-3"
+            >
+              <Icon
+                size={22}
+                className={cn(
+                  "transition-colors",
+                  isActive ? "text-teal-400" : "text-white/40"
+                )}
+              />
+              <span
+                className={cn(
+                  "text-[10px] transition-colors",
+                  isActive ? "text-teal-400 font-medium" : "text-white/40"
+                )}
               >
-                <div
-                  className={`relative p-1.5 rounded-xl transition-all duration-200 ${
-                    isActive ? "bg-teal-500/15" : "bg-transparent"
-                  }`}
-                >
-                  <Icon
-                    size={22}
-                    strokeWidth={isActive ? 2.5 : 1.8}
-                    className={`transition-colors duration-200 ${
-                      isActive ? "text-teal-400" : "text-white/35"
-                    }`}
-                  />
-                  {isActive && (
-                    <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-amber-400" />
-                  )}
-                </div>
-                <span
-                  className={`text-[10px] font-medium transition-colors duration-200 ${
-                    isActive ? "text-teal-400" : "text-white/35"
-                  }`}
-                >
-                  {tab.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+                {tab.label}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </nav>
   );
