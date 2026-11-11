@@ -10,127 +10,142 @@ import { SpotDetail } from "./components/SpotDetail";
 import { PostDetail } from "./components/PostDetail";
 import { PublishPage } from "./components/PublishPage";
 import { FullScreenGallery } from "./components/FullScreenGallery";
+import { ToastProvider } from "./components/Toast";
 import type { Spot, Post, User } from "./types";
 
-type Tab = "home" | "spots" | "discover" | "profile";
 type View =
-  | { type: "tab"; tab: Tab }
-  | { type: "spot"; spot: Spot }
-  | { type: "post"; post: Post }
-  | { type: "user"; user: User }
-  | { type: "publish" }
-  | { type: "savedSpots" };
+  | "home"
+  | "spots"
+  | "discover"
+  | "profile"
+  | "spotDetail"
+  | "postDetail"
+  | "userPage"
+  | "savedSpots"
+  | "publish";
 
-function App() {
-  const [view, setView] = useState<View>({ type: "tab", tab: "home" });
-  const [gallery, setGallery] = useState<{ images: string[]; startIndex: number } | null>(null);
+export default function App() {
+  const [currentView, setCurrentView] = useState<View>("home");
+  const [selectedSpot, setSelectedSpot] = useState<Spot | null>(null);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [activeTab, setActiveTab] = useState("home");
+  const [gallery, setGallery] = useState<{
+    images: string[];
+    startIndex: number;
+  } | null>(null);
 
-  const goToTab = useCallback((tab: Tab) => {
-    setView({ type: "tab", tab });
-    window.scrollTo(0, 0);
+  const handleSpotClick = useCallback((spot: Spot) => {
+    setSelectedSpot(spot);
+    setCurrentView("spotDetail");
   }, []);
 
-  const goToSpot = useCallback((spot: Spot) => {
-    setView({ type: "spot", spot });
-    window.scrollTo(0, 0);
+  const handlePostClick = useCallback((post: Post) => {
+    setSelectedPost(post);
+    setCurrentView("postDetail");
   }, []);
 
-  const goToPost = useCallback((post: Post) => {
-    setView({ type: "post", post });
-    window.scrollTo(0, 0);
+  const handleUserClick = useCallback((user: User) => {
+    setSelectedUser(user);
+    setCurrentView("userPage");
   }, []);
 
-  const goToUser = useCallback((user: User) => {
-    setView({ type: "user", user });
-    window.scrollTo(0, 0);
+  const handleBack = useCallback(() => {
+    if (currentView === "spotDetail") {
+      setCurrentView("spots");
+      setSelectedSpot(null);
+    } else if (currentView === "postDetail") {
+      setCurrentView("discover");
+      setSelectedPost(null);
+    } else if (currentView === "userPage") {
+      setCurrentView("discover");
+      setSelectedUser(null);
+    } else if (currentView === "savedSpots") {
+      setCurrentView("profile");
+    } else if (currentView === "publish") {
+      setCurrentView("discover");
+    } else {
+      setCurrentView("home");
+    }
+  }, [currentView]);
+
+  const handleTabChange = useCallback((tab: string) => {
+    setActiveTab(tab);
+    switch (tab) {
+      case "home":
+        setCurrentView("home");
+        break;
+      case "spots":
+        setCurrentView("spots");
+        break;
+      case "discover":
+        setCurrentView("discover");
+        break;
+      case "profile":
+        setCurrentView("profile");
+        break;
+    }
   }, []);
 
-  const goToPublish = useCallback(() => {
-    setView({ type: "publish" });
-    window.scrollTo(0, 0);
+  const showGallery = useCallback((images: string[], startIndex: number) => {
+    setGallery({ images, startIndex });
   }, []);
-
-  const goToSavedSpots = useCallback(() => {
-    setView({ type: "savedSpots" });
-    window.scrollTo(0, 0);
-  }, []);
-
-  const goBack = useCallback(() => {
-    setView((v) => {
-      if (v.type === "user") return { type: "tab", tab: "profile" };
-      if (v.type === "spot") return { type: "tab", tab: "spots" };
-      if (v.type === "post") return { type: "tab", tab: "discover" };
-      if (v.type === "publish") return { type: "tab", tab: "discover" };
-      if (v.type === "savedSpots") return { type: "tab", tab: "profile" };
-      return v;
-    });
-    window.scrollTo(0, 0);
-  }, []);
-
-  const currentTab: Tab =
-    view.type === "tab"
-      ? view.tab
-      : view.type === "user"
-      ? "profile"
-      : view.type === "spot"
-      ? "spots"
-      : view.type === "publish"
-      ? "discover"
-      : view.type === "savedSpots"
-      ? "profile"
-      : "discover";
-
-  const showNav = view.type === "tab";
 
   return (
+    <ToastProvider>
     <div className="min-h-[100dvh] bg-[#030508] flex flex-col max-w-md mx-auto relative overflow-hidden">
-      <main className={`flex-1 overflow-y-auto scrollbar-hide ${showNav ? "pb-20" : ""}`}>
-        {view.type === "tab" && view.tab === "home" && (
-          <HomePage onSpotClick={goToSpot} />
+      <main className="flex-1 overflow-y-auto scrollbar-hide">
+        {currentView === "home" && (
+          <HomePage onSpotClick={handleSpotClick} />
         )}
-        {view.type === "tab" && view.tab === "spots" && (
-          <SpotsPage onSpotClick={goToSpot} />
+        {currentView === "spots" && (
+          <SpotsPage onSpotClick={handleSpotClick} />
         )}
-        {view.type === "tab" && view.tab === "discover" && (
-          <DiscoverPage onPostClick={goToPost} onPublishClick={goToPublish} />
+        {currentView === "discover" && (
+          <DiscoverPage
+            onPostClick={handlePostClick}
+            onPublishClick={() => setCurrentView("publish")}
+          />
         )}
-        {view.type === "tab" && view.tab === "profile" && (
+        {currentView === "profile" && (
           <ProfilePage
-            onUserClick={goToUser}
-            onPostClick={goToPost}
-            onSpotClick={goToSpot}
-            onSavedSpotsClick={goToSavedSpots}
+            onUserClick={handleUserClick}
+            onPostClick={handlePostClick}
+            onSpotClick={handleSpotClick}
+            onSavedSpotsClick={() => setCurrentView("savedSpots")}
           />
         )}
-        {view.type === "spot" && (
-          <SpotDetail spot={view.spot} onBack={goBack} />
+        {currentView === "spotDetail" && selectedSpot && (
+          <SpotDetail spot={selectedSpot} onBack={handleBack} />
         )}
-        {view.type === "post" && (
+        {currentView === "postDetail" && selectedPost && (
           <PostDetail
-            post={view.post}
-            onBack={goBack}
-            onUserClick={goToUser}
+            post={selectedPost}
+            onBack={handleBack}
+            onUserClick={handleUserClick}
+            onSpotClick={handleSpotClick}
+            onShowGallery={showGallery}
           />
         )}
-        {view.type === "user" && (
+        {currentView === "userPage" && selectedUser && (
           <UserPage
-            user={view.user}
-            onBack={goBack}
-            onPostClick={goToPost}
-            onSpotClick={goToSpot}
+            user={selectedUser}
+            onBack={handleBack}
+            onPostClick={handlePostClick}
+            onSpotClick={handleSpotClick}
           />
         )}
-        {view.type === "publish" && (
-          <PublishPage onBack={goBack} onPublish={() => goToTab("discover")} />
+        {currentView === "savedSpots" && (
+          <SavedSpotsPage onBack={handleBack} onSpotClick={handleSpotClick} />
         )}
-        {view.type === "savedSpots" && (
-          <SavedSpotsPage onBack={goBack} onSpotClick={goToSpot} />
+        {currentView === "publish" && (
+          <PublishPage onBack={handleBack} />
         )}
       </main>
 
-      {showNav && (
-        <BottomNav active={currentTab} onChange={goToTab} />
-      )}
+      {!["spotDetail", "postDetail", "userPage", "savedSpots", "publish"].includes(
+        currentView
+      ) && <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />}
 
       {gallery && (
         <FullScreenGallery
@@ -140,7 +155,6 @@ function App() {
         />
       )}
     </div>
+    </ToastProvider>
   );
 }
-
-export default App;

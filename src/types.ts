@@ -1,7 +1,33 @@
+export interface BookingSlot {
+  id: string;
+  date: string;
+  timeRange: string;
+  available: boolean;
+}
+
+export interface Reply {
+  id: string;
+  authorId: string;
+  content: string;
+  createdAt: string;
+  likes: number;
+}
+
+export interface Comment {
+  id: string;
+  authorId: string;
+  content: string;
+  createdAt: string;
+  likes: number;
+  replies: Reply[];
+}
+
 export interface Spot {
   id: string;
   name: string;
   address: string;
+  lat: number;
+  lng: number;
   phone: string;
   hours: string;
   fishTypes: string[];
@@ -14,91 +40,31 @@ export interface Spot {
   crowd: "少" | "适中" | "多" | "爆满";
   fishCondition: "没口" | "一般" | "有口" | "爆护";
   bookingSlots?: BookingSlot[];
-  lat: number;
-  lng: number;
-}
-
-export interface BookingSlot {
-  id: string;
-  date: string;
-  timeRange: string;
-  available: boolean;
-}
-
-export interface Post {
-  id: string;
-  author: User;
-  content: string;
-  images: string[];
-  createdAt: string;
-  views: number;
-  likes: number;
-  follows: number;
-  favorites: number;
-  hotComment?: Comment;
-  comments: Comment[];
-  category?: string;
-  postType?: "daily" | "technique";
-}
-
-export interface Comment {
-  id: string;
-  author: User;
-  content: string;
-  likes: number;
-  images?: string[];
-  createdAt?: string;
-  replies?: Reply[];
-}
-
-export interface Reply {
-  id: string;
-  author: User;
-  content: string;
-  likes: number;
-  createdAt?: string;
-  replyTo?: string;
 }
 
 export interface User {
   id: string;
-  avatar: string;
+  userId: string;
   nickname: string;
-  userId?: string;
-  followers?: number;
-  following?: number;
-  postsCount?: number;
-  favorites?: number;
-  bio?: string;
-  recentSpots?: Spot[];
+  avatar: string;
+  bio: string;
+  followers: number;
+  following: number;
+  postsCount: number;
+  favorites: number;
+  likes?: number;
   recentPosts?: Post[];
-  savedSpots?: Spot[];
-  savedPosts?: Post[];
+  recentSpots?: Spot[];
 }
 
-export interface Weather {
-  temp: number;
-  condition: string;
-  wind: string;
-  forecast: ForecastDay[];
+export interface Post {
+  id: string;
+  authorId: string;
+  content: string;
+  images: string[];
+  createdAt: string;
+  category: string;
+  likes: number;
+  comments: Comment[];
+  views: number;
 }
-
-export interface ForecastDay {
-  day: string;
-  tempHigh: number;
-  tempLow: number;
-  condition: string;
-  wind: string;
-}
-
-export type PostType = "daily" | "technique";
-
-export const TECHNIQUE_CATEGORIES = [
-  "钓技巧",
-  "钓具",
-  "饵料",
-  "选位",
-  "调漂",
-  "天气",
-  "其他",
-];
